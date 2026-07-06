@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Password;
 
 class UserForm
 {
@@ -34,10 +35,12 @@ class UserForm
                     ->label('Пароль')
                     ->password()
                     ->revealable()
+                    ->rule(Password::default())
                     ->confirmed()
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->required(fn (string $operation): bool => $operation === 'create')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('Минимум 8 символов, буквы и цифры. На проде — строже.'),
                 TextInput::make('password_confirmation')
                     ->label('Подтверждение пароля')
                     ->password()

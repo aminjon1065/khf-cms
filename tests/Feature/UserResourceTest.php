@@ -1,6 +1,8 @@
 <?php
 
 use App\Filament\Resources\Users\Pages\CreateUser;
+use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
@@ -65,8 +67,8 @@ test('admin can create a new user with role', function () {
             'name' => $user->name,
             'email' => $user->email,
             'role' => 'editor',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'password1',
+            'password_confirmation' => 'password1',
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -76,4 +78,71 @@ test('admin can create a new user with role', function () {
     expect($created)->not->toBeNull()
         ->and($created->is_active)->toBeTrue()
         ->and($created->hasRole('editor'))->toBeTrue();
+});
+
+test('creating a user rejects a weak password', function () {
+    $admin = createAdminUser();
+
+    Livewire::actingAs($admin)
+        ->test(CreateUser::class)
+        ->fillForm([
+            'name' => 'Слаб',
+            'email' => 'weak@khf.tj',
+            'role' => 'editor',
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['password']);
+
+    expect(User::query()->where('email', 'weak@khf.tj')->exists())->toBeFalse();
+});
+
+test('the last active admin cannot be demoted to editor', function () {
+    $admin = createAdminUser();
+
+    Livewire::actingAs($admin)
+        ->test(EditUser::class, ['record' => $admin->getRouteKey()])
+        ->fillForm(['role' => 'editor'])
+        ->call('save');
+
+    expect($admin->fresh()->hasRole('admin'))->toBeTrue()
+        ->and($admin->fresh()->hasRole('editor'))->toBeFalse();
+});
+
+test('the last active admin can be edited without changing role', function () {
+    $admin = createAdminUser();
+
+    Livewire::actingAs($admin)
+        ->test(EditUser::class, ['record' => $admin->getRouteKey()])
+        ->fillForm(['name' => 'Обновлённое Имя', 'role' => 'admin'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($admin->fresh()->name)->toBe('Обновлённое Имя')
+        ->and($admin->fresh()->hasRole('admin'))->toBeTrue();
+});
+
+test('an admin can be demoted while another admin remains', function () {
+    $actor = createAdminUser();
+    $target = createAdminUser();
+
+    Livewire::actingAs($actor)
+        ->test(EditUser::class, ['record' => $target->getRouteKey()])
+        ->fillForm(['role' => 'editor'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($target->fresh()->hasRole('editor'))->toBeTrue()
+        ->and($target->fresh()->hasRole('admin'))->toBeFalse();
+});
+
+test('the deactivate action is hidden for the last active admin', function () {
+    $admin = createAdminUser();
+
+    Livewire::actingAs($admin)
+        ->test(ListUsers::class)
+        ->assertTableActionHidden('deactivate', $admin);
+
+    expect($admin->fresh()->is_active)->toBeTrue();
 });

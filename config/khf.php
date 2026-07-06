@@ -8,6 +8,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Seed administrator (ToR §4)
+    |--------------------------------------------------------------------------
+    |
+    | The first admin account created by DatabaseSeeder. Credentials come from
+    | .env so they are never hard-coded. If ADMIN_PASSWORD is empty the seeder
+    | generates a strong random password and prints it once to the console.
+    */
+    'admin' => [
+        'name' => env('ADMIN_NAME', 'Администратор'),
+        'email' => env('ADMIN_EMAIL', 'admin@khf.tj'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Frontend ISR revalidation (docs/API-CONTRACT.md §5, ToR §8)
     |--------------------------------------------------------------------------
     |

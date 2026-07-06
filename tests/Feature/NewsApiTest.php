@@ -71,7 +71,9 @@ test('index filters by category id and by label', function () {
     $this->getJson('/api/v1/news?category='.$category->id)
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.slug', 'a');
 
-    $this->getJson('/api/v1/news?category=СПАСЕНИЕ')
+    // Non-ASCII query values must be percent-encoded, exactly as a browser or
+    // the Next.js fetch client sends them (raw UTF-8 in a URL is malformed).
+    $this->getJson('/api/v1/news?'.http_build_query(['category' => 'СПАСЕНИЕ']))
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.slug', 'a');
 });
 
@@ -80,7 +82,7 @@ test('index searches by title', function () {
     News::factory()->create(['title' => ['tj' => 'Наҷот дар дарё'], 'slug' => 'rescue']);
     News::factory()->create(['title' => ['tj' => 'Сохтмони роҳ'], 'slug' => 'road']);
 
-    $this->getJson('/api/v1/news?search=дарё')
+    $this->getJson('/api/v1/news?'.http_build_query(['search' => 'дарё']))
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.slug', 'rescue');
 });
 

@@ -12,6 +12,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -54,5 +55,32 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             ->logOnly(['name', 'email', 'is_active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    /**
+     * Active users holding the admin role.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeActiveAdmins(Builder $query): void
+    {
+        $query->where('is_active', true)
+            ->whereHas('roles', fn (Builder $roles) => $roles->where('name', 'admin'));
+    }
+
+    /**
+     * Whether this is the only remaining active administrator. Guards against
+     * demoting or deactivating the last admin and locking everyone out (ToR §4).
+     */
+    public function isLastActiveAdmin(): bool
+    {
+        if (! $this->is_active || ! $this->hasRole('admin')) {
+            return false;
+        }
+
+        return static::query()
+            ->activeAdmins()
+            ->whereKeyNot($this->getKey())
+            ->doesntExist();
     }
 }

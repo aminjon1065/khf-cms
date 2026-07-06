@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Tables;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -51,8 +52,23 @@ class UsersTable
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (User $record): bool => $record->is_active && $record->id !== auth()->id())
-                    ->action(fn (User $record) => $record->update(['is_active' => false])),
+                    ->visible(fn (User $record): bool => $record->is_active
+                        && $record->id !== auth()->id()
+                        && ! $record->isLastActiveAdmin())
+                    ->action(function (User $record): void {
+                        // Defence in depth: never strand the system without an admin (ToR §4).
+                        if ($record->isLastActiveAdmin()) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Действие недоступно')
+                                ->body('Нельзя деактивировать последнего активного администратора.')
+                                ->send();
+
+                            return;
+                        }
+
+                        $record->update(['is_active' => false]);
+                    }),
                 Action::make('activate')
                     ->label('Активировать')
                     ->icon('heroicon-o-check-circle')

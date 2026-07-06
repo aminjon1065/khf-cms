@@ -51,6 +51,16 @@ class RevalidationService
         $this->revalidate([RevalidationTag::Home->value]);
     }
 
+    public function forDocuments(): void
+    {
+        $this->revalidate([RevalidationTag::Documents->value]);
+    }
+
+    public function forStructure(): void
+    {
+        $this->revalidate([RevalidationTag::Structure->value]);
+    }
+
     /**
      * "Сбросить весь кеш": send every fixed tag.
      */

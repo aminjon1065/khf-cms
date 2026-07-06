@@ -34,8 +34,8 @@
 
 ## M3. Остальной контент + формы
 
-- [ ] Документы: категории (laws|decrees|orders|guides|reports) + записи с файлом (pdf/docx/xlsx; type/size из файла) + `GET /documents?category=` (categories с count и виртуальной «all»)
-- [ ] Структура: leadership / departments / regional_offices (+ sort) + `GET /structure`
+- [x] Документы: категории (laws|decrees|orders|guides|reports, enum с локализ. label) + записи с файлом (pdf/docx/xlsx; type/size из файла, тип по content-MIME) + `GET /documents?category=` (categories с count и виртуальной «all», тег ревалидации `documents`)
+- [x] Структура: leadership / departments / regional_offices (модели + sort/active, translatable, 3 Filament-ресурса группы «Структура») + `GET /structure` (composed, тег ревалидации `structure`)
 - [ ] Деятельность: directions (icon lucide, stat) / programs (status enum) + `GET /activities`
 - [ ] Карта регионов: regions (risk enum, activeIncidents, inline-редактирование в таблице) + глобальный блок stats + `GET /regions`
 - [ ] Контакты: hotlines / head_office (singleton) / offices + `GET /contacts`

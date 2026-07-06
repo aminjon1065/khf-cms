@@ -3,6 +3,7 @@
 namespace App\Filament\Support;
 
 use Closure;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Tabs;
@@ -44,7 +45,7 @@ class LocaleTabs
         return Tabs::make($label)->tabs($tabs)->columnSpanFull();
     }
 
-    public static function text(string $attribute, string $label, int $maxLength = 255): Tabs
+    public static function text(string $attribute, string $label, bool $requiredDefault = true, int $maxLength = 255): Tabs
     {
         return self::make(
             $attribute,
@@ -53,6 +54,20 @@ class LocaleTabs
                 ->label($label)
                 ->required($required)
                 ->maxLength($maxLength),
+            $requiredDefault,
+        );
+    }
+
+    public static function textarea(string $attribute, string $label, bool $requiredDefault = true, int $rows = 3): Tabs
+    {
+        return self::make(
+            $attribute,
+            $label,
+            fn (string $statePath, string $locale, bool $required): Textarea => Textarea::make($statePath)
+                ->label($label)
+                ->required($required)
+                ->rows($rows),
+            $requiredDefault,
         );
     }
 }

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\NewsController;
+use App\Http\Controllers\Api\V1\StructureController;
 use App\Http\Middleware\SetApiLocale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +21,10 @@ Route::prefix('v1')
 
             Route::get('/home/slides', [HomeController::class, 'slides']);
             Route::get('/home', [HomeController::class, 'index']);
+
+            Route::get('/documents', [DocumentController::class, 'index']);
+
+            Route::get('/structure', [StructureController::class, 'index']);
         };
 
         $routes();
