@@ -19,7 +19,7 @@ test('admin can access users resource', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/adminjon/users')
+        ->get('/admin/users')
         ->assertSuccessful();
 });
 
@@ -27,7 +27,7 @@ test('editor cannot access users resource', function () {
     $editor = createEditorUser();
 
     $this->actingAs($editor)
-        ->get('/adminjon/users')
+        ->get('/admin/users')
         ->assertForbidden();
 });
 
@@ -35,15 +35,15 @@ test('inactive users cannot access filament panel', function () {
     $user = User::factory()->inactive()->create();
     $user->assignRole('admin');
 
-    expect($user->canAccessPanel(Filament::getPanel('adminjon')))->toBeFalse();
+    expect($user->canAccessPanel(Filament::getPanel('admin')))->toBeFalse();
 });
 
 test('active staff can access filament panel', function () {
     $admin = createAdminUser();
     $editor = createEditorUser();
 
-    expect($admin->canAccessPanel(Filament::getPanel('adminjon')))->toBeTrue();
-    expect($editor->canAccessPanel(Filament::getPanel('adminjon')))->toBeTrue();
+    expect($admin->canAccessPanel(Filament::getPanel('admin')))->toBeTrue();
+    expect($editor->canAccessPanel(Filament::getPanel('admin')))->toBeTrue();
 });
 
 test('public registration route is not available', function () {
@@ -54,7 +54,7 @@ test('admin can create a new user with role', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/adminjon/users/create')
+        ->get('/admin/users/create')
         ->assertSuccessful();
 
     $user = User::factory()->make();

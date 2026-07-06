@@ -24,7 +24,7 @@ test('admin can access activity log page', function () {
     $admin = createAdminWithTwoFactor();
 
     $this->actingAs($admin)
-        ->get('/adminjon/activity-logs')
+        ->get('/admin/activity-logs')
         ->assertSuccessful();
 });
 
@@ -33,7 +33,7 @@ test('editor cannot access activity log page', function () {
     $editor->assignRole('editor');
 
     $this->actingAs($editor)
-        ->get('/adminjon/activity-logs')
+        ->get('/admin/activity-logs')
         ->assertForbidden();
 });
 

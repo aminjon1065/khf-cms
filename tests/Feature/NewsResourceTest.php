@@ -19,8 +19,8 @@ beforeEach(function () {
 test('both admin and editor can access the news resource', function () {
     News::factory()->create();
 
-    $this->actingAs(createAdminUser())->get('/adminjon/news')->assertSuccessful();
-    $this->actingAs(createEditorUser())->get('/adminjon/news')->assertSuccessful();
+    $this->actingAs(createAdminUser())->get('/admin/news')->assertSuccessful();
+    $this->actingAs(createEditorUser())->get('/admin/news')->assertSuccessful();
 });
 
 test('a news item can be created with translations and an auto slug', function () {

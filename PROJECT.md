@@ -1,7 +1,7 @@
 # khf-cms — инструкции проекта для ИИ-агента
 
 Backend/CMS официального портала КЧС и ГО Республики Таджикистан.
-**Laravel 13 · Filament 5 (панель: `/adminjon`) · MySQL 8 · PHP 8.3+ (рантайм 8.5).**
+**Laravel 13 · Filament 5 (панель: `/admin`) · MySQL 8 · PHP 8.3+ (рантайм 8.5).**
 Публичный read-only JSON API для готового фронта на Next.js 14 (репозиторий `khf-front`, ISR).
 
 Также действуют Laravel Boost guidelines (в CLAUDE.md/AGENTS.md) — при конфликте по стилю кода приоритет у Boost, по предметной области — у этого файла и ToR.

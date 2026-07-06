@@ -13,7 +13,7 @@ beforeEach(function () {
 });
 
 test('filament panel has app totp multi factor authentication enabled', function () {
-    expect(Filament::getPanel('adminjon')->hasMultiFactorAuthentication())->toBeTrue();
+    expect(Filament::getPanel('admin')->hasMultiFactorAuthentication())->toBeTrue();
     expect(Filament::getMultiFactorAuthenticationProviders())->toHaveKey('app');
 });
 
@@ -22,8 +22,8 @@ test('admin without two factor is redirected to setup page', function () {
     $admin->assignRole('admin');
 
     $this->actingAs($admin)
-        ->get('/adminjon')
-        ->assertRedirectContains('/adminjon/multi-factor-authentication/set-up');
+        ->get('/admin')
+        ->assertRedirectContains('/admin/multi-factor-authentication/set-up');
 });
 
 test('editor without two factor can access dashboard', function () {
@@ -31,7 +31,7 @@ test('editor without two factor can access dashboard', function () {
     $editor->assignRole('editor');
 
     $this->actingAs($editor)
-        ->get('/adminjon')
+        ->get('/admin')
         ->assertSuccessful();
 });
 
@@ -41,7 +41,7 @@ test('admin with configured two factor can access dashboard', function () {
     $admin->saveAppAuthenticationSecret('test-secret');
 
     $this->actingAs($admin)
-        ->get('/adminjon')
+        ->get('/admin')
         ->assertSuccessful();
 });
 
@@ -49,7 +49,7 @@ test('login attempts are throttled after repeated failures', function () {
     $user = User::factory()->create();
     $user->assignRole('editor');
 
-    $key = 'filament.adminjon.auth.login.'.sha1('test@example.com|127.0.0.1');
+    $key = 'filament.admin.auth.login.'.sha1('test@example.com|127.0.0.1');
 
     for ($attempt = 0; $attempt < 5; $attempt++) {
         RateLimiter::hit($key);

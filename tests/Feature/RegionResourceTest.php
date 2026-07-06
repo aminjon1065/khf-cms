@@ -18,13 +18,13 @@ test('admin can access regions resource', function () {
     Region::factory()->create(); // exercise the table render (columns, badges)
 
     $this->actingAs(createAdminUser())
-        ->get('/adminjon/regions')
+        ->get('/admin/regions')
         ->assertSuccessful();
 });
 
 test('editor cannot access regions resource', function () {
     $this->actingAs(createEditorUser())
-        ->get('/adminjon/regions')
+        ->get('/admin/regions')
         ->assertForbidden();
 });
 

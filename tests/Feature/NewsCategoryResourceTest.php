@@ -19,13 +19,13 @@ test('admin can access news categories resource', function () {
     NewsCategory::factory()->create(); // exercise the table render (columns, badges)
 
     $this->actingAs(createAdminUser())
-        ->get('/adminjon/news-categories')
+        ->get('/admin/news-categories')
         ->assertSuccessful();
 });
 
 test('editor cannot access news categories resource', function () {
     $this->actingAs(createEditorUser())
-        ->get('/adminjon/news-categories')
+        ->get('/admin/news-categories')
         ->assertForbidden();
 });
 

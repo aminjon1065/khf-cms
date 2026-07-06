@@ -45,7 +45,7 @@ test('admin can access api token management page', function () {
     $admin = createAdminWithTwoFactorForApi();
 
     $this->actingAs($admin)
-        ->get('/adminjon/api-token')
+        ->get('/admin/api-token')
         ->assertSuccessful();
 });
 
@@ -54,6 +54,6 @@ test('editor cannot access api token management page', function () {
     $editor->assignRole('editor');
 
     $this->actingAs($editor)
-        ->get('/adminjon/api-token')
+        ->get('/admin/api-token')
         ->assertForbidden();
 });
