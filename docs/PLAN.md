@@ -21,9 +21,9 @@
 - [x] Модель News: поля по ToR §6.1, translatable JSON, slug (транслит, уникальный), enum статусов, `views`
 - [x] Медиатека: spatie/laravel-medialibrary, конверсии `thumb` 400×300 / `card` 800×600 / `hero` 1920×1080 + WebP q82, генерация в очереди
 - [x] Filament-ресурс «Новости»: Tiptap RichEditor (вставка картинок из медиатеки), автосейв черновика, переключатель языков + индикатор переводов, фильтры/поиск/массовые действия, дублирование
-- [ ] Ревизии записей (15 версий, просмотр/откат)
-- [ ] Планировщик публикации `scheduled → published` (schedule:run, ежеминутно)
-- [ ] Санитизация HTML (белый список) при сохранении body
+- [x] Ревизии записей (15 версий, просмотр/откат)
+- [x] Планировщик публикации `scheduled → published` (schedule:run, ежеминутно)
+- [x] Санитизация HTML (белый список) при сохранении body
 - [ ] API: `GET /news` (page, per_page=12, category, search, сортировка published_at desc), `GET /news/{idOrSlug}` (slug или id, 404), `GET /news/{idOrSlug}/related?limit=3`
 - [ ] `POST /news/{idOrSlug}/view` — публичный, throttle 10 rpm/IP, дедуп IP+UA 1 час
 - [ ] Слайдер: модель + Filament-ресурс (drag-сортировка, active, связь с новостью) + `GET /home/slides`

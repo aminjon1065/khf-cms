@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\NewsStatus;
+use App\Services\BodySanitizer;
 use App\Services\NewsRevisionService;
 use App\Services\Transliterator;
 use Database\Factories\NewsFactory;
@@ -68,6 +69,18 @@ class News extends Model implements HasMedia
                 $news->slug = static::makeUniqueSlug(
                     Transliterator::slug((string) $news->getTranslation('title', 'tj'))
                 );
+            }
+        });
+
+        static::saving(function (News $news): void {
+            if (! $news->isDirty('body')) {
+                return;
+            }
+
+            $sanitizer = app(BodySanitizer::class);
+
+            foreach ($news->getTranslations('body') as $locale => $html) {
+                $news->setTranslation('body', $locale, $sanitizer->clean($html));
             }
         });
 
