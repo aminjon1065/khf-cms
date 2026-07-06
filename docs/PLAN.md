@@ -26,11 +26,11 @@
 - [x] Санитизация HTML (белый список) при сохранении body
 - [x] API: `GET /news` (page, per_page=12, category, search, сортировка published_at desc), `GET /news/{idOrSlug}` (slug или id, 404), `GET /news/{idOrSlug}/related?limit=3`
 - [x] `POST /news/{idOrSlug}/view` — публичный, throttle 10 rpm/IP, дедуп IP+UA 1 час
-- [ ] Слайдер: модель + Filament-ресурс (drag-сортировка, active, связь с новостью) + `GET /home/slides`
-- [ ] Вебхук ревалидации: очередь + 3 ретрая, карта тегов из контракта; настройки (FRONTEND_URL, секрет) в CMS + кнопки «Проверить» / «Сбросить весь кеш»
-- [ ] Сидеры новостей/слайдов/категорий = мок-данные фронта (см. `lib/data.ts` в khf-front)
-- [ ] Контрактные Pest-тесты всех эндпоинтов M2 (+ тест fallback-локали, тест 401 без токена)
-- [ ] ✅ Проверка этапа: фронт со staging-API показывает новости и слайдер на 3 языках; публикация обновляет сайт ≤ 1 мин
+- [x] Слайдер: модель + Filament-ресурс (drag-сортировка, active, связь с новостью) + `GET /home/slides`
+- [x] Вебхук ревалидации: очередь + 3 ретрая, карта тегов из контракта; настройки (FRONTEND_URL, секрет) в CMS + кнопки «Проверить» / «Сбросить весь кеш»
+- [x] Сидеры новостей/слайдов/категорий = мок-данные фронта (см. `lib/data.ts` в khf-front)
+- [x] Контрактные Pest-тесты всех эндпоинтов M2 (+ тест fallback-локали, тест 401 без токена)
+- [x] ✅ Проверка этапа: фронт со staging-API показывает новости и слайдер на 3 языках; публикация обновляет сайт ≤ 1 мин
 
 ## M3. Остальной контент + формы
 
@@ -40,7 +40,7 @@
 - [ ] Карта регионов: regions (risk enum, activeIncidents, inline-редактирование в таблице) + глобальный блок stats + `GET /regions`
 - [ ] Контакты: hotlines / head_office (singleton) / offices + `GET /contacts`
 - [ ] Форум (read-only витрина): categories / topics / stats + `GET /forum`
-- [ ] Глобальные блоки главной (только admin): services, president, site stats + `GET /home`
+- [x] Глобальные блоки главной (только admin): services, president, site stats + `GET /home`
 - [ ] Формы: `POST /reports`, `POST /contact`, `POST /subscriptions` — Form Requests, honeypot, throttle, нормализация телефона, reference `ЧС-NNNNNN`/`SUB-NNNNNN`
 - [ ] CMS-разделы «Обращения» (3 шт.): статусы new/in_progress/closed, фильтры, экспорт CSV
 - [ ] E-mail уведомление дежурному о новой заявке о ЧС (адреса в настройках)

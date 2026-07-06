@@ -21,6 +21,7 @@ test('env example documents all required M1 variables', function () {
         'MAIL_FROM_ADDRESS',
         'MAIL_FROM_NAME',
         'QUEUE_CONNECTION',
+        'API_TOKEN_USER_EMAIL',
     ];
 
     foreach ($requiredKeys as $key) {

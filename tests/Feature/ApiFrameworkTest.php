@@ -38,6 +38,14 @@ test('api health accepts ru and en locale prefixes', function () {
         ->assertJsonPath('data.locale', 'en');
 });
 
+test('api auth failures return json 401 even without an accept header', function () {
+    // A guest without the Accept header must still get 401 JSON, not a 500 from
+    // Laravel redirecting to a non-existent `login` route (ForceJsonResponse).
+    $this->get('/api/v1/news')
+        ->assertUnauthorized()
+        ->assertJson(['message' => 'Unauthenticated.']);
+});
+
 test('api returns json 404 for unknown routes', function () {
     $this->withToken(apiToken())
         ->getJson('/api/v1/unknown-endpoint')

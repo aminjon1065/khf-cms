@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\NewsController;
 use App\Http\Middleware\SetApiLocale;
 use Illuminate\Http\Request;
@@ -15,6 +16,9 @@ Route::prefix('v1')
             Route::get('/news', [NewsController::class, 'index']);
             Route::get('/news/{idOrSlug}/related', [NewsController::class, 'related']);
             Route::get('/news/{idOrSlug}', [NewsController::class, 'show']);
+
+            Route::get('/home/slides', [HomeController::class, 'slides']);
+            Route::get('/home', [HomeController::class, 'index']);
         };
 
         $routes();

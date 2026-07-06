@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\NewsStatus;
 use App\Services\BodySanitizer;
 use App\Services\NewsRevisionService;
+use App\Services\RevalidationService;
 use App\Services\Transliterator;
 use Database\Factories\NewsFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -87,6 +88,18 @@ class News extends Model implements HasMedia
         static::saved(function (News $news): void {
             app(NewsRevisionService::class)->record($news);
         });
+
+        static::saved(function (News $news): void {
+            if ($news->shouldTriggerRevalidation()) {
+                app(RevalidationService::class)->forNews($news);
+            }
+        });
+
+        static::deleted(function (News $news): void {
+            if ($news->isPubliclyVisible()) {
+                app(RevalidationService::class)->forNews($news);
+            }
+        });
     }
 
     public function category(): BelongsTo
@@ -155,6 +168,27 @@ class News extends Model implements HasMedia
     {
         $query->where('status', NewsStatus::Published)
             ->where('published_at', '<=', now());
+    }
+
+    /**
+     * Whether this item is currently visible through the public API.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return $this->status === NewsStatus::Published
+            && $this->published_at !== null
+            && $this->published_at->lte(now());
+    }
+
+    /**
+     * Whether a save should revalidate the frontend: it affects public output
+     * only if the item is public now or was published before the change (e.g.
+     * an archive). Draft autosaves are intentionally skipped.
+     */
+    public function shouldTriggerRevalidation(): bool
+    {
+        return $this->isPubliclyVisible()
+            || $this->getRawOriginal('status') === NewsStatus::Published->value;
     }
 
     public function getFallbackLocale(): ?string

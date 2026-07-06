@@ -18,7 +18,16 @@
         </include>
     </source>
     <php>
+        <!-- Image conversions (spatie/medialibrary + GD) run inline under the sync
+             queue and push peak memory well past PHP's 128M default across the suite. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
+        <!-- Pin the framework locale so a dev .env (ru panel) can't shift test
+             behaviour. Must be a valid ICU locale — 'tj' is NOT (Tajik ICU code is
+             'tg'), and Number::format() throws under it; the API's internal 'tj'
+             locale only ever renders JSON, never ICU-formatted numbers. -->
+        <env name="APP_LOCALE" value="en"/>
+        <env name="APP_FALLBACK_LOCALE" value="en"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
@@ -28,6 +37,8 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="FRONTEND_URL" value=""/>
+        <env name="REVALIDATE_SECRET" value=""/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

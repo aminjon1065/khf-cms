@@ -134,6 +134,26 @@ test('the url locale selects the translation and falls back to tajik', function 
     $this->getJson('/api/v1/news/loc')->assertOk()->assertJsonPath('data.title', 'Сарлавҳаи тоҷикӣ');
 });
 
+test('the tg url segment serves tajik content (the segment the frontend uses)', function () {
+    actingAsFrontend();
+    News::factory()->create([
+        'title' => ['tj' => 'Сарлавҳаи тоҷикӣ', 'ru' => 'Русский заголовок'],
+        'slug' => 'tg-seg',
+    ]);
+
+    $this->getJson('/api/v1/tg/news/tg-seg')->assertOk()->assertJsonPath('data.title', 'Сарлавҳаи тоҷикӣ');
+});
+
+test('related respects the limit parameter', function () {
+    actingAsFrontend();
+    $category = NewsCategory::factory()->create();
+    News::factory()->for($category, 'category')->create(['slug' => 'cur']);
+    News::factory()->for($category, 'category')->count(3)->create();
+
+    $this->getJson('/api/v1/news/cur/related?limit=1')
+        ->assertOk()->assertJsonCount(1, 'data');
+});
+
 test('image is null without a cover and an ImageSet with one', function () {
     actingAsFrontend();
     Storage::fake('public');

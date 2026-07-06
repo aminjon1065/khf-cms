@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             NewsCategorySeeder::class,
             RegionSeeder::class,
+            NewsSeeder::class,
+            SlideSeeder::class,
+            HomeContentSeeder::class,
         ]);
 
         $admin = User::factory()->create([
