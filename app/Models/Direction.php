@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\RevalidationTag;
 use App\Models\Concerns\RevalidatesContent;
-use Database\Factories\RegionalOfficeFactory;
+use Database\Factories\DirectionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,27 +14,27 @@ use Spatie\Translatable\Attributes\Translatable;
 use Spatie\Translatable\HasTranslations;
 
 /**
- * A regional office of the committee (docs/API-CONTRACT.md §GET /structure).
+ * An activity direction (docs/API-CONTRACT.md §GET /activities). Exposes `slug`
+ * as the API `id` and a nested stat { value, label }.
  */
-#[Translatable('region', 'head', 'address')]
-class RegionalOffice extends Model
+#[Translatable('title', 'description', 'stat_label')]
+class Direction extends Model
 {
-    /** @use HasFactory<RegionalOfficeFactory> */
+    /** @use HasFactory<DirectionFactory> */
     use HasFactory, HasTranslations, LogsActivity, RevalidatesContent;
 
     protected $fillable = [
-        'region',
-        'head',
-        'phone',
-        'address',
+        'slug',
+        'icon',
+        'title',
+        'description',
+        'stat_value',
+        'stat_label',
         'sort',
         'active',
     ];
 
     /**
-     * Mirror the DB default so a record created without an explicit `active`
-     * still reports active=true in-memory (needed by the revalidation gate).
-     *
      * @var array<string, mixed>
      */
     protected $attributes = [
@@ -53,7 +53,7 @@ class RegionalOffice extends Model
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<Direction>  $query
      */
     public function scopeActive(Builder $query): void
     {
@@ -61,7 +61,7 @@ class RegionalOffice extends Model
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<Direction>  $query
      */
     public function scopeOrdered(Builder $query): void
     {
@@ -76,7 +76,7 @@ class RegionalOffice extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['region', 'head', 'phone', 'sort', 'active'])
+            ->logOnly(['slug', 'icon', 'title', 'stat_value', 'sort', 'active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -86,6 +86,6 @@ class RegionalOffice extends Model
      */
     protected function revalidationTags(): array
     {
-        return [RevalidationTag::Structure->value];
+        return [RevalidationTag::Activities->value];
     }
 }

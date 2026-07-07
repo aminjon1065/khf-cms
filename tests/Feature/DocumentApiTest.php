@@ -2,10 +2,12 @@
 
 use App\Enums\DocType;
 use App\Enums\DocumentCategory;
+use App\Jobs\SendRevalidationRequest;
 use App\Models\Document;
 use App\Models\User;
 use Database\Seeders\DocumentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -132,4 +134,17 @@ test('the document seeder is idempotent', function () {
     $this->seed(DocumentSeeder::class);
 
     expect(Document::query()->count())->toBe(12);
+});
+
+test('creating an active document revalidates, an inactive one does not', function () {
+    Queue::fake();
+    Document::factory()->create();
+    Queue::assertPushed(
+        SendRevalidationRequest::class,
+        fn (SendRevalidationRequest $job): bool => in_array('documents', $job->tags, true),
+    );
+
+    Queue::fake();
+    Document::factory()->inactive()->create();
+    Queue::assertNotPushed(SendRevalidationRequest::class);
 });

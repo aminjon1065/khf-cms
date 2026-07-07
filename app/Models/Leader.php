@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\RevalidatesStructure;
+use App\Enums\RevalidationTag;
+use App\Models\Concerns\RevalidatesContent;
 use Database\Factories\LeaderFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ use Spatie\Translatable\HasTranslations;
 class Leader extends Model
 {
     /** @use HasFactory<LeaderFactory> */
-    use HasFactory, HasTranslations, LogsActivity, RevalidatesStructure;
+    use HasFactory, HasTranslations, LogsActivity, RevalidatesContent;
 
     protected $fillable = [
         'name',
@@ -78,5 +79,13 @@ class Leader extends Model
             ->logOnly(['name', 'role', 'rank', 'sort', 'active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function revalidationTags(): array
+    {
+        return [RevalidationTag::Structure->value];
     }
 }

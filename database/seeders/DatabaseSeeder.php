@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             HomeContentSeeder::class,
             DocumentSeeder::class,
             StructureSeeder::class,
+            ActivitySeeder::class,
+            MapSeeder::class,
         ]);
 
         $this->seedAdministrator();

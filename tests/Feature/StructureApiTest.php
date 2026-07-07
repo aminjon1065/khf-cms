@@ -110,6 +110,14 @@ test('creating a structure record without an explicit active flag still revalida
     Queue::assertPushed(SendRevalidationRequest::class);
 });
 
+test('creating an inactive structure record does not revalidate', function () {
+    Queue::fake();
+
+    Leader::factory()->inactive()->create();
+
+    Queue::assertNotPushed(SendRevalidationRequest::class);
+});
+
 test('the structure seeder is idempotent', function () {
     $this->seed(StructureSeeder::class);
     $this->seed(StructureSeeder::class);

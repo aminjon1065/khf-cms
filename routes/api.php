@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ActivityController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\NewsController;
+use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\StructureController;
 use App\Http\Middleware\SetApiLocale;
 use Illuminate\Http\Request;
@@ -25,6 +27,10 @@ Route::prefix('v1')
             Route::get('/documents', [DocumentController::class, 'index']);
 
             Route::get('/structure', [StructureController::class, 'index']);
+
+            Route::get('/activities', [ActivityController::class, 'index']);
+
+            Route::get('/regions', [RegionController::class, 'index']);
         };
 
         $routes();

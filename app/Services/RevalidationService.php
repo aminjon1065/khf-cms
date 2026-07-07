@@ -56,9 +56,9 @@ class RevalidationService
         $this->revalidate([RevalidationTag::Documents->value]);
     }
 
-    public function forStructure(): void
+    public function forRegions(): void
     {
-        $this->revalidate([RevalidationTag::Structure->value]);
+        $this->revalidate([RevalidationTag::Regions->value]);
     }
 
     /**

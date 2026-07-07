@@ -127,11 +127,15 @@ class Document extends Model
 
     /**
      * Whether a save affects public output: the document is active now, or was
-     * active before the change (e.g. it was just hidden).
+     * active before the change (e.g. it was just hidden). A fresh insert has no
+     * prior state (getOriginal reflects the $attributes default), so it only
+     * counts as public when active now.
      */
     public function shouldTriggerRevalidation(): bool
     {
-        return $this->is_active || (bool) $this->getRawOriginal('is_active');
+        $wasActive = ! $this->wasRecentlyCreated && (bool) $this->getOriginal('is_active');
+
+        return $this->is_active || $wasActive;
     }
 
     public function getFallbackLocale(): ?string

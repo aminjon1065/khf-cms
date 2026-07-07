@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\RevalidatesStructure;
+use App\Enums\RevalidationTag;
+use App\Models\Concerns\RevalidatesContent;
 use Database\Factories\DepartmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ use Spatie\Translatable\HasTranslations;
 class Department extends Model
 {
     /** @use HasFactory<DepartmentFactory> */
-    use HasFactory, HasTranslations, LogsActivity, RevalidatesStructure;
+    use HasFactory, HasTranslations, LogsActivity, RevalidatesContent;
 
     protected $fillable = [
         'title',
@@ -77,5 +78,13 @@ class Department extends Model
             ->logOnly(['title', 'head', 'sort', 'active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function revalidationTags(): array
+    {
+        return [RevalidationTag::Structure->value];
     }
 }

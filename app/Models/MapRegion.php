@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Enums\RevalidationTag;
+use App\Enums\RiskLevel;
 use App\Models\Concerns\RevalidatesContent;
-use Database\Factories\RegionalOfficeFactory;
+use Database\Factories\MapRegionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,27 +15,28 @@ use Spatie\Translatable\Attributes\Translatable;
 use Spatie\Translatable\HasTranslations;
 
 /**
- * A regional office of the committee (docs/API-CONTRACT.md §GET /structure).
+ * An operational map region (docs/API-CONTRACT.md §GET /regions). Exposes
+ * `slug` as the API `id`; `risk` is sent as its backing value.
  */
-#[Translatable('region', 'head', 'address')]
-class RegionalOffice extends Model
+#[Translatable('name', 'center', 'note')]
+class MapRegion extends Model
 {
-    /** @use HasFactory<RegionalOfficeFactory> */
+    /** @use HasFactory<MapRegionFactory> */
     use HasFactory, HasTranslations, LogsActivity, RevalidatesContent;
 
     protected $fillable = [
-        'region',
-        'head',
-        'phone',
-        'address',
+        'slug',
+        'name',
+        'center',
+        'note',
+        'risk',
+        'active_incidents',
+        'stations',
         'sort',
         'active',
     ];
 
     /**
-     * Mirror the DB default so a record created without an explicit `active`
-     * still reports active=true in-memory (needed by the revalidation gate).
-     *
      * @var array<string, mixed>
      */
     protected $attributes = [
@@ -47,13 +49,16 @@ class RegionalOffice extends Model
     protected function casts(): array
     {
         return [
+            'risk' => RiskLevel::class,
+            'active_incidents' => 'integer',
+            'stations' => 'integer',
             'sort' => 'integer',
             'active' => 'boolean',
         ];
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<MapRegion>  $query
      */
     public function scopeActive(Builder $query): void
     {
@@ -61,7 +66,7 @@ class RegionalOffice extends Model
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<MapRegion>  $query
      */
     public function scopeOrdered(Builder $query): void
     {
@@ -76,7 +81,7 @@ class RegionalOffice extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['region', 'head', 'phone', 'sort', 'active'])
+            ->logOnly(['slug', 'name', 'risk', 'active_incidents', 'stations', 'sort', 'active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -86,6 +91,6 @@ class RegionalOffice extends Model
      */
     protected function revalidationTags(): array
     {
-        return [RevalidationTag::Structure->value];
+        return [RevalidationTag::Regions->value];
     }
 }

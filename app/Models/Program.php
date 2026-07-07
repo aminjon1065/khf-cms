@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\ProgramStatus;
 use App\Enums\RevalidationTag;
 use App\Models\Concerns\RevalidatesContent;
-use Database\Factories\RegionalOfficeFactory;
+use Database\Factories\ProgramFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,27 +15,25 @@ use Spatie\Translatable\Attributes\Translatable;
 use Spatie\Translatable\HasTranslations;
 
 /**
- * A regional office of the committee (docs/API-CONTRACT.md §GET /structure).
+ * A state programme (docs/API-CONTRACT.md §GET /activities). `status` is
+ * exposed as its localized label.
  */
-#[Translatable('region', 'head', 'address')]
-class RegionalOffice extends Model
+#[Translatable('title', 'description')]
+class Program extends Model
 {
-    /** @use HasFactory<RegionalOfficeFactory> */
+    /** @use HasFactory<ProgramFactory> */
     use HasFactory, HasTranslations, LogsActivity, RevalidatesContent;
 
     protected $fillable = [
-        'region',
-        'head',
-        'phone',
-        'address',
+        'title',
+        'period',
+        'status',
+        'description',
         'sort',
         'active',
     ];
 
     /**
-     * Mirror the DB default so a record created without an explicit `active`
-     * still reports active=true in-memory (needed by the revalidation gate).
-     *
      * @var array<string, mixed>
      */
     protected $attributes = [
@@ -47,13 +46,14 @@ class RegionalOffice extends Model
     protected function casts(): array
     {
         return [
+            'status' => ProgramStatus::class,
             'sort' => 'integer',
             'active' => 'boolean',
         ];
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<Program>  $query
      */
     public function scopeActive(Builder $query): void
     {
@@ -61,7 +61,7 @@ class RegionalOffice extends Model
     }
 
     /**
-     * @param  Builder<RegionalOffice>  $query
+     * @param  Builder<Program>  $query
      */
     public function scopeOrdered(Builder $query): void
     {
@@ -76,7 +76,7 @@ class RegionalOffice extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['region', 'head', 'phone', 'sort', 'active'])
+            ->logOnly(['title', 'period', 'status', 'sort', 'active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -86,6 +86,6 @@ class RegionalOffice extends Model
      */
     protected function revalidationTags(): array
     {
-        return [RevalidationTag::Structure->value];
+        return [RevalidationTag::Activities->value];
     }
 }
