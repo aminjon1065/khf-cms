@@ -38,19 +38,19 @@
 - [x] Структура: leadership / departments / regional_offices (модели + sort/active, translatable, 3 Filament-ресурса группы «Структура») + `GET /structure` (composed, тег ревалидации `structure`)
 - [x] Деятельность: directions (slug=id, icon lucide, stat{value,label}) / programs (status enum, локализ. label) + `GET /activities` (composed, тег `activities`). Трейт ревалидации обобщён в RevalidatesContent.
 - [x] Карта регионов: MapRegion (risk enum, activeIncidents/stations, inline-редактирование в таблице; отдельно от справочника Region) + глобальный блок stats (MapSetting singleton monitoring + вычисляемые счётчики) + `GET /regions` (тег `regions`)
-- [ ] Контакты: hotlines / head_office (singleton) / offices + `GET /contacts`
-- [ ] Форум (read-only витрина): categories / topics / stats + `GET /forum`
+- [x] Контакты: hotlines / offices (головной офис = запись `is_head`, единственность enforced) + `GET /contacts` (composed, тег ревалидации `contacts`)
+- [x] Форум (read-only витрина): categories / topics / stats (ForumStat singleton, все значения — строки) + `GET /forum` (composed, тег ревалидации `forum`)
 - [x] Глобальные блоки главной (только admin): services, president, site stats + `GET /home`
-- [ ] Формы: `POST /reports`, `POST /contact`, `POST /subscriptions` — Form Requests, honeypot, throttle, нормализация телефона, reference `ЧС-NNNNNN`/`SUB-NNNNNN`
-- [ ] CMS-разделы «Обращения» (3 шт.): статусы new/in_progress/closed, фильтры, экспорт CSV
-- [ ] E-mail уведомление дежурному о новой заявке о ЧС (адреса в настройках)
-- [ ] Сидеры всех разделов = мок-данные фронта (`lib/content/*.ts` в khf-front)
-- [ ] Контрактные тесты всех эндпоинтов M3
-- [ ] ✅ Проверка этапа: фронт полностью работает с `NEXT_PUBLIC_USE_MOCKS=false`
+- [x] Формы: `POST /reports`, `POST /contact`, `POST /subscriptions` — Form Requests, honeypot (`website` prohibited), throttle 5rpm/IP, нормализация телефона (`App\Support\PhoneNumber`), reference `ЧС-NNNNNN`/`SUB-NNNNNN` (трейт `GeneratesReference`); ответ без обёртки `data`
+- [x] CMS-разделы «Обращения» (3 шт.): Report/ContactMessage/Subscription инбоксы, статусы new/in_progress/closed (`SubmissionStatus`, inline `SelectColumn`), фильтры, экспорт CSV (`App\Support\CsvExporter`, BOM+защита от формул); политики admin+editor (view/update), создание запрещено, удаление только admin
+- [x] E-mail уведомление дежурному о новой заявке о ЧС (`NewReportNotification`, очередь; адреса в `khf.duty.emails` из `DUTY_EMAILS`)
+- [x] Сидеры всех разделов = мок-данные фронта (`lib/content/*.ts` в khf-front) — все контент-разделы; обращения генерируются формами (мока нет)
+- [x] Контрактные тесты всех эндпоинтов M3
+- [ ] ✅ Проверка этапа: фронт полностью работает с `NEXT_PUBLIC_USE_MOCKS=false` (код готов; нужен live-прогон front↔staging)
 
 ## M4. Сдача
 
-- [ ] OpenAPI 3 спецификация + коллекция Bruno/Postman
+- [x] OpenAPI 3 спецификация (`docs/openapi.yaml`, 3.1, все 16 эндпоинтов + 33 схемы) + Postman-коллекция и окружение (`docs/khf-api.postman_*.json`); тест-страж дрейфа (`OpenApiSpecTest`: спец ↔ реальные роуты)
 - [ ] spatie/laravel-backup: БД ежедневно (30 дней), медиа еженедельно; тест восстановления
 - [ ] Чек-лист безопасности ToR §10 (HSTS, санитизация, MIME, ротация токена)
 - [ ] CI: pint + pest

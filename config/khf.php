@@ -35,4 +35,16 @@ return [
         'path' => '/api/revalidate',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | On-duty notifications (ToR §M3)
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated e-mail addresses that receive a notification for every new
+    | emergency report (POST /reports). Empty disables the notification.
+    */
+    'duty' => [
+        'emails' => env('DUTY_EMAILS', ''),
+    ],
+
 ];

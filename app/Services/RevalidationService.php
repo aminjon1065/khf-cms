@@ -61,6 +61,11 @@ class RevalidationService
         $this->revalidate([RevalidationTag::Regions->value]);
     }
 
+    public function forForum(): void
+    {
+        $this->revalidate([RevalidationTag::Forum->value]);
+    }
+
     /**
      * "Сбросить весь кеш": send every fixed tag.
      */

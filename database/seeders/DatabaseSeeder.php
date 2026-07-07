@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
             StructureSeeder::class,
             ActivitySeeder::class,
             MapSeeder::class,
+            ContactSeeder::class,
+            ForumSeeder::class,
         ]);
 
         $this->seedAdministrator();

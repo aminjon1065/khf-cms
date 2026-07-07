@@ -1,0 +1,802 @@
+openapi: 3.1.0
+info:
+  title: КҲФ CMS — публичный API
+  version: "1.0.0"
+  description: |
+    Read-only JSON API официального портала КЧС и ГО Республики Таджикистан для
+    фронта на Next.js (ISR). Источник истины по формам ответов — `docs/API-CONTRACT.md`;
+    имена ключей (camelCase), обёртки и форматы дат (`DD.MM.YYYY`) заморожены.
+
+    ## Локаль
+    Все GET-эндпоинты принимают опциональный префикс локали в пути:
+    `/api/v1/{tg|ru|en}/...`. Без префикса — таджикский (`tj`). Отсутствующий перевод
+    поля отдаётся в tj-версии. POST-формы и счётчик просмотров — **без** префикса локали.
+
+    ## Аутентификация
+    Все GET требуют статический `Authorization: Bearer <token>` (Sanctum). POST-формы
+    и `POST /news/{idOrSlug}/view` — публичные (без токена).
+
+    ## Ошибки
+    Тело ошибок — всегда JSON: `401` (нет/неверный токен), `404` (не найдено),
+    `422` (валидация, стандарт Laravel), `429` (throttle).
+  contact:
+    name: КҲФ CMS
+
+servers:
+  - url: "{scheme}://{host}/api/v1"
+    description: База API (локаль по умолчанию — tj)
+    variables:
+      scheme:
+        default: https
+        enum: [https, http]
+      host:
+        default: api.khf.tj
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: News
+    description: Новости, слайдер, счётчик просмотров
+  - name: Home
+    description: Глобальные блоки главной
+  - name: Documents
+    description: Нормативные документы
+  - name: Structure
+    description: Структура Комитета
+  - name: Activities
+    description: Направления деятельности и программы
+  - name: Regions
+    description: Карта регионов и статистика
+  - name: Contacts
+    description: Контакты и горячие линии
+  - name: Forum
+    description: Витрина форума (read-only)
+  - name: Forms
+    description: Публичные формы (POST, без токена)
+
+paths:
+  /health:
+    get:
+      tags: [Home]
+      summary: Health-check
+      operationId: health
+      responses:
+        "200":
+          description: OK
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /news:
+    get:
+      tags: [News]
+      summary: Список новостей (пагинация)
+      description: |
+        Опубликованные новости, сортировка `published_at desc`. Доступен префикс локали.
+      operationId: listNews
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - name: per_page
+          in: query
+          description: Размер страницы (1–50, по умолчанию 12).
+          schema: { type: integer, default: 12, minimum: 1, maximum: 50 }
+        - name: category
+          in: query
+          description: Фильтр по id или label категории.
+          schema: { type: string }
+        - name: search
+          in: query
+          description: Поиск по заголовку.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Пагинированный список NewsItem
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsList" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /news/{idOrSlug}:
+    get:
+      tags: [News]
+      summary: Новость по slug или id
+      operationId: showNews
+      parameters:
+        - $ref: "#/components/parameters/IdOrSlug"
+      responses:
+        "200":
+          description: NewsItem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/NewsItem" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /news/{idOrSlug}/related:
+    get:
+      tags: [News]
+      summary: Похожие новости
+      description: Новости той же категории/региона, исключая текущую.
+      operationId: relatedNews
+      parameters:
+        - $ref: "#/components/parameters/IdOrSlug"
+        - name: limit
+          in: query
+          description: Количество (1–50, по умолчанию 3).
+          schema: { type: integer, default: 3, minimum: 1, maximum: 50 }
+      responses:
+        "200":
+          description: Пагинированный список NewsItem
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NewsList" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /news/{idOrSlug}/view:
+    post:
+      tags: [News]
+      summary: Счётчик просмотров (публичный)
+      description: |
+        Публичный beacon. Без токена и без префикса локали. Throttle 10 rpm/IP,
+        дедуп IP+UA на 1 час. Всегда отвечает `204`.
+      operationId: viewNews
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/IdOrSlug"
+      responses:
+        "204":
+          description: Учтено (или дубликат — тоже 204)
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /home/slides:
+    get:
+      tags: [Home]
+      summary: Слайды главной
+      operationId: homeSlides
+      responses:
+        "200":
+          description: Активные слайды в ручном порядке
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Slide" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /home:
+    get:
+      tags: [Home]
+      summary: Блоки главной (сервисы, президент, статистика)
+      operationId: home
+      responses:
+        "200":
+          description: HomeData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/HomeData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /documents:
+    get:
+      tags: [Documents]
+      summary: Документы и категории
+      operationId: documents
+      parameters:
+        - name: category
+          in: query
+          description: "Фильтр по категории: laws | decrees | orders | guides | reports."
+          schema:
+            type: string
+            enum: [laws, decrees, orders, guides, reports]
+      responses:
+        "200":
+          description: DocumentsData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/DocumentsData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /structure:
+    get:
+      tags: [Structure]
+      summary: Структура Комитета
+      operationId: structure
+      responses:
+        "200":
+          description: StructureData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/StructureData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /activities:
+    get:
+      tags: [Activities]
+      summary: Направления и программы
+      operationId: activities
+      responses:
+        "200":
+          description: ActivitiesData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/ActivitiesData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /regions:
+    get:
+      tags: [Regions]
+      summary: Карта регионов и статистика
+      operationId: regions
+      responses:
+        "200":
+          description: RegionsData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/RegionsData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      summary: Контакты, горячие линии, офисы
+      operationId: contacts
+      responses:
+        "200":
+          description: ContactsData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/ContactsData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /forum:
+    get:
+      tags: [Forum]
+      summary: Витрина форума (категории, темы, статистика)
+      operationId: forum
+      responses:
+        "200":
+          description: ForumData
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/ForumData" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /reports:
+    post:
+      tags: [Forms]
+      summary: Заявка о ЧС (публичная)
+      description: |
+        Без токена и без префикса локали. Throttle 5 rpm/IP + honeypot (`website`
+        должно быть пустым). Ответ **без** обёртки `data`.
+      operationId: submitReport
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReportRequest" }
+      responses:
+        "200":
+          description: Принято
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkReference" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /contact:
+    post:
+      tags: [Forms]
+      summary: Обращение через форму контактов (публичное)
+      description: Без токена. Throttle 5 rpm/IP + honeypot. Ответ без обёртки `data`.
+      operationId: submitContact
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactRequest" }
+      responses:
+        "200":
+          description: Принято
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /subscriptions:
+    post:
+      tags: [Forms]
+      summary: Подписка на оповещения (публичная)
+      description: Без токена. Throttle 5 rpm/IP + honeypot. Ответ без обёртки `data`.
+      operationId: submitSubscription
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubscriptionRequest" }
+      responses:
+        "200":
+          description: Принято
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkReference" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Статический read-only токен фронта (Sanctum).
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Номер страницы.
+      schema: { type: integer, default: 1, minimum: 1 }
+    IdOrSlug:
+      name: idOrSlug
+      in: path
+      required: true
+      description: Slug новости или числовой id.
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Нет или неверный Bearer-токен
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { message: "Unauthenticated." }
+    NotFound:
+      description: Не найдено
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { message: "Not found" }
+    ValidationError:
+      description: Ошибка валидации (стандарт Laravel)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidationError" }
+    TooManyRequests:
+      description: Превышен лимит запросов (throttle)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { message: "Too Many Attempts." }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+      required: [message]
+
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+      required: [message, errors]
+      example:
+        message: "The phone field is required."
+        errors:
+          phone: ["The phone field is required."]
+
+    ImageSet:
+      type: [object, "null"]
+      description: Абсолютные URL конверсий; поле image везде может быть null.
+      properties:
+        thumb: { type: string, format: uri }
+        card: { type: string, format: uri }
+        hero: { type: string, format: uri }
+        original: { type: string, format: uri }
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        last_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+    PaginationLinks:
+      type: object
+      properties:
+        first: { type: [string, "null"] }
+        last: { type: [string, "null"] }
+        prev: { type: [string, "null"] }
+        next: { type: [string, "null"] }
+
+    NewsItem:
+      type: object
+      properties:
+        id: { type: integer, example: 6105 }
+        slug: { type: string, example: "spasateli-vyzvolili-troih" }
+        category: { type: [string, "null"], description: "label в текущей локали", example: "СПАСЕНИЕ" }
+        categoryColor:
+          type: [string, "null"]
+          enum: [text-alert, text-brand, text-success, text-warn, null]
+        title: { type: string }
+        date: { type: [string, "null"], description: "DD.MM.YYYY", example: "14.06.2026" }
+        excerpt: { type: string }
+        body: { type: string, description: "Санитизированный HTML" }
+        author: { type: [string, "null"] }
+        views: { type: integer }
+        region: { type: [string, "null"], example: "Хатлон" }
+        image: { $ref: "#/components/schemas/ImageSet" }
+      required: [id, slug, title, date, excerpt, body, views, image]
+
+    NewsList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/NewsItem" }
+        meta: { $ref: "#/components/schemas/PaginationMeta" }
+        links: { $ref: "#/components/schemas/PaginationLinks" }
+      required: [data, meta, links]
+
+    Slide:
+      type: object
+      properties:
+        id: { type: integer }
+        category: { type: [string, "null"] }
+        title: { type: string }
+        date: { type: [string, "null"], description: "DD.MM.YYYY" }
+        source: { type: [string, "null"] }
+        image: { $ref: "#/components/schemas/ImageSet" }
+        newsSlug: { type: [string, "null"], description: "Слаг связанной новости или null" }
+      required: [id, title, image, newsSlug]
+
+    Service:
+      type: object
+      properties:
+        id: { type: string, example: "112" }
+        title: { type: string }
+        subtitle: { type: [string, "null"] }
+        primary: { type: [boolean, "null"] }
+        tel: { type: [string, "null"] }
+        route: { type: [string, "null"], description: "Ключ маршрута фронта: report | safety | subscribe | …" }
+      required: [id, title]
+
+    HomeData:
+      type: object
+      properties:
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/Service" }
+        president:
+          type: object
+          properties:
+            name: { type: [string, "null"] }
+            role: { type: [string, "null"] }
+            quote: { type: [string, "null"] }
+            href: { type: [string, "null"], format: uri }
+        stats:
+          type: object
+          description: Значения — строки.
+          properties:
+            today: { type: [string, "null"] }
+            month: { type: [string, "null"] }
+            rescued: { type: [string, "null"] }
+            reaction: { type: [string, "null"] }
+      required: [services, president, stats]
+
+    DocumentCategoryEntry:
+      type: object
+      properties:
+        id: { type: string, description: "all | laws | decrees | orders | guides | reports" }
+        label: { type: string }
+        count: { type: integer }
+      required: [id, label, count]
+
+    DocItem:
+      type: object
+      properties:
+        id: { type: string, example: "d1" }
+        title: { type: string }
+        category: { type: string, enum: [laws, decrees, orders, guides, reports] }
+        number: { type: [string, "null"], example: "№ 53" }
+        date: { type: [string, "null"], description: "DD.MM.YYYY" }
+        type: { type: [string, "null"], enum: [PDF, DOCX, XLSX, null] }
+        size: { type: [string, "null"], example: "2,4 МБ" }
+        url: { type: [string, "null"], format: uri }
+      required: [id, title, category]
+
+    DocumentsData:
+      type: object
+      properties:
+        categories:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentCategoryEntry" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DocItem" }
+      required: [categories, items]
+
+    Leader:
+      type: object
+      properties:
+        name: { type: string }
+        role: { type: string }
+        rank: { type: [string, "null"] }
+        bio: { type: string }
+      required: [name, role, bio]
+
+    Department:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        head: { type: [string, "null"] }
+      required: [title, description]
+
+    Office:
+      type: object
+      properties:
+        region: { type: string }
+        head: { type: [string, "null"] }
+        phone: { type: string }
+        address: { type: string }
+      required: [region, phone, address]
+
+    StructureData:
+      type: object
+      properties:
+        leadership:
+          type: array
+          items: { $ref: "#/components/schemas/Leader" }
+        departments:
+          type: array
+          items: { $ref: "#/components/schemas/Department" }
+        offices:
+          type: array
+          items: { $ref: "#/components/schemas/Office" }
+      required: [leadership, departments, offices]
+
+    Direction:
+      type: object
+      properties:
+        id: { type: string, example: "rescue" }
+        icon: { type: string, description: "Имя иконки lucide-react", example: "LifeBuoy" }
+        title: { type: string }
+        description: { type: string }
+        stat:
+          type: object
+          properties:
+            value: { type: string }
+            label: { type: string }
+      required: [id, icon, title, description, stat]
+
+    Program:
+      type: object
+      properties:
+        title: { type: string }
+        period: { type: string, example: "2024–2028" }
+        status: { type: string, description: "Локализуемый label: Амалкунанда | Ба нақша | Анҷомёфта" }
+        description: { type: string }
+      required: [title, period, status, description]
+
+    ActivitiesData:
+      type: object
+      properties:
+        directions:
+          type: array
+          items: { $ref: "#/components/schemas/Direction" }
+        programs:
+          type: array
+          items: { $ref: "#/components/schemas/Program" }
+      required: [directions, programs]
+
+    MapRegion:
+      type: object
+      properties:
+        id: { type: string, example: "dushanbe" }
+        name: { type: string }
+        center: { type: string }
+        risk: { type: string, enum: [low, medium, high] }
+        activeIncidents: { type: integer }
+        stations: { type: integer }
+        note: { type: [string, "null"] }
+      required: [id, name, center, risk, activeIncidents, stations]
+
+    RegionsData:
+      type: object
+      properties:
+        regions:
+          type: array
+          items: { $ref: "#/components/schemas/MapRegion" }
+        stats:
+          type: object
+          properties:
+            regions: { type: integer }
+            stations: { type: integer }
+            activeIncidents: { type: integer }
+            monitoring: { type: string, description: "Строка, напр. «320+»" }
+          required: [regions, stations, activeIncidents, monitoring]
+      required: [regions, stats]
+
+    Hotline:
+      type: object
+      properties:
+        number: { type: string, example: "112" }
+        label: { type: string }
+        note: { type: string }
+        primary: { type: boolean }
+      required: [number, label, note, primary]
+
+    ContactOffice:
+      type: object
+      properties:
+        region: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        hours: { type: string }
+      required: [region, address, phone, email, hours]
+
+    ContactsData:
+      type: object
+      properties:
+        hotlines:
+          type: array
+          items: { $ref: "#/components/schemas/Hotline" }
+        headOffice:
+          oneOf:
+            - { $ref: "#/components/schemas/ContactOffice" }
+            - { type: "null" }
+        offices:
+          type: array
+          items: { $ref: "#/components/schemas/ContactOffice" }
+      required: [hotlines, headOffice, offices]
+
+    ForumCategory:
+      type: object
+      properties:
+        id: { type: string, example: "general" }
+        title: { type: string }
+        description: { type: string }
+        topics: { type: integer }
+        posts: { type: integer }
+        icon: { type: string, description: "Имя иконки lucide-react", example: "MessagesSquare" }
+      required: [id, title, description, topics, posts, icon]
+
+    ForumTopic:
+      type: object
+      properties:
+        id: { type: string, example: "t1" }
+        title: { type: string }
+        category: { type: string, description: "slug раздела" }
+        author: { type: string }
+        replies: { type: integer }
+        views: { type: integer }
+        lastActivity: { type: string, description: "Строка, напр. «2 соат пеш»" }
+        pinned: { type: boolean }
+      required: [id, title, category, author, replies, views, lastActivity, pinned]
+
+    ForumData:
+      type: object
+      properties:
+        categories:
+          type: array
+          items: { $ref: "#/components/schemas/ForumCategory" }
+        topics:
+          type: array
+          items: { $ref: "#/components/schemas/ForumTopic" }
+        stats:
+          type: object
+          description: Значения — строки.
+          properties:
+            members: { type: string }
+            topics: { type: string }
+            posts: { type: string }
+            online: { type: string }
+          required: [members, topics, posts, online]
+      required: [categories, topics, stats]
+
+    ReportRequest:
+      type: object
+      properties:
+        type: { type: string, example: "Сӯхтор" }
+        region: { type: string, example: "Душанбе" }
+        location: { type: string }
+        description: { type: string }
+        phone: { type: string, example: "+992 37 221-12-12" }
+        website: { type: string, description: "Honeypot — оставлять пустым." }
+      required: [type, region, location, description, phone]
+
+    ContactRequest:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        subject: { type: string }
+        message: { type: string }
+        website: { type: string, description: "Honeypot — оставлять пустым." }
+      required: [name, email, subject, message]
+
+    SubscriptionRequest:
+      type: object
+      properties:
+        channel: { type: string, enum: [email, sms, telegram] }
+        region: { type: string }
+        categories:
+          type: array
+          items: { type: string }
+          minItems: 1
+        contact: { type: string, description: "email | телефон | @username в зависимости от channel" }
+        website: { type: string, description: "Honeypot — оставлять пустым." }
+      required: [channel, region, categories, contact]
+
+    Ok:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+      required: [ok]
+
+    OkReference:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        reference: { type: string, example: "ЧС-000123" }
+      required: [ok, reference]

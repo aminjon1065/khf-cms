@@ -1,0 +1,170 @@
+{
+  "info": {
+    "name": "КҲФ CMS API (v1)",
+    "description": "Публичный API портала КЧС и ГО РТ. GET-эндпоинты требуют Bearer-токен (переменная {{token}}). Локаль — опциональный префикс пути для GET: вставьте /{{locale}} после /api/v1 (напр. {{baseUrl}}/ru/news); без префикса = tj. POST-формы — публичные, без токена и без локали. Источник истины: docs/openapi.yaml и docs/API-CONTRACT.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "locale", "value": "ru" }
+  ],
+  "item": [
+    {
+      "name": "News",
+      "item": [
+        {
+          "name": "List news",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/news?per_page=12&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["news"],
+              "query": [
+                { "key": "per_page", "value": "12" },
+                { "key": "page", "value": "1" },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show news (by slug or id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/news/:idOrSlug", "host": ["{{baseUrl}}"], "path": ["news", ":idOrSlug"], "variable": [{ "key": "idOrSlug", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Related news",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/news/:idOrSlug/related?limit=3", "host": ["{{baseUrl}}"], "path": ["news", ":idOrSlug", "related"], "query": [{ "key": "limit", "value": "3" }], "variable": [{ "key": "idOrSlug", "value": "1" }] }
+          }
+        },
+        {
+          "name": "View beacon (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/news/:idOrSlug/view", "host": ["{{baseUrl}}"], "path": ["news", ":idOrSlug", "view"], "variable": [{ "key": "idOrSlug", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Home",
+      "item": [
+        {
+          "name": "Health",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] } }
+        },
+        {
+          "name": "Home slides",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/home/slides", "host": ["{{baseUrl}}"], "path": ["home", "slides"] } }
+        },
+        {
+          "name": "Home blocks",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/home", "host": ["{{baseUrl}}"], "path": ["home"] } }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "List documents",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/documents?category=laws", "host": ["{{baseUrl}}"], "path": ["documents"], "query": [{ "key": "category", "value": "laws", "description": "laws|decrees|orders|guides|reports" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Structure",
+      "item": [
+        { "name": "Structure", "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/structure", "host": ["{{baseUrl}}"], "path": ["structure"] } } }
+      ]
+    },
+    {
+      "name": "Activities",
+      "item": [
+        { "name": "Activities", "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/activities", "host": ["{{baseUrl}}"], "path": ["activities"] } } }
+      ]
+    },
+    {
+      "name": "Regions",
+      "item": [
+        { "name": "Regions", "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/regions", "host": ["{{baseUrl}}"], "path": ["regions"] } } }
+      ]
+    },
+    {
+      "name": "Contacts",
+      "item": [
+        { "name": "Contacts", "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/contacts", "host": ["{{baseUrl}}"], "path": ["contacts"] } } }
+      ]
+    },
+    {
+      "name": "Forum",
+      "item": [
+        { "name": "Forum", "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/forum", "host": ["{{baseUrl}}"], "path": ["forum"] } } }
+      ]
+    },
+    {
+      "name": "Forms (public)",
+      "item": [
+        {
+          "name": "Submit report (ЧС)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"Сӯхтор\",\n  \"region\": \"Душанбе\",\n  \"location\": \"кӯчаи Рӯдакӣ 1\",\n  \"description\": \"Дым из окна третьего этажа.\",\n  \"phone\": \"+992 37 221-12-12\"\n}" },
+            "url": { "raw": "{{baseUrl}}/reports", "host": ["{{baseUrl}}"], "path": ["reports"] }
+          }
+        },
+        {
+          "name": "Submit contact message",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Гулнора Каримова\",\n  \"email\": \"gulnora@example.tj\",\n  \"subject\": \"Вопрос о подписке\",\n  \"message\": \"Как подписаться на оповещения по Хатлону?\"\n}" },
+            "url": { "raw": "{{baseUrl}}/contact", "host": ["{{baseUrl}}"], "path": ["contact"] }
+          }
+        },
+        {
+          "name": "Submit subscription",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"channel\": \"email\",\n  \"region\": \"Хатлон\",\n  \"categories\": [\"Заминҷунбӣ\", \"Сел/обхезӣ\"],\n  \"contact\": \"user@example.tj\"\n}" },
+            "url": { "raw": "{{baseUrl}}/subscriptions", "host": ["{{baseUrl}}"], "path": ["subscriptions"] }
+          }
+        }
+      ]
+    }
+  ]
+}
