@@ -57,6 +57,10 @@
 - [ ] Docker compose (php-fpm, nginx, mysql, worker, scheduler) + README деплоя
 - [ ] Инструкция редактора (RU, со скриншотами)
 
+## Доп. возможности (по запросу заказчика)
+
+- [x] Переиспользуемая медиатека (WordPress-style): модель `MediaAsset` (spatie, изображения+документы, конверсии thumb/card/hero для картинок), Filament-раздел «Медиатека». News: обложка (`cover_media_asset_id`) + галерея (`news_gallery`, CMS-only, не в API) выбираются из медиатеки; Documents: файл (`media_asset_id`) выбирается из медиатеки. Один файл переиспользуется многократно. Защита от удаления используемого файла (`isInUse` + `deleting`-гард + гард в Filament, включая bulk). Смена файла ассета — ревалидация связанных news/documents + ресинк type/size документов (слушатель `MediaHasBeenAddedEvent`). Пикеры обложки/галереи ограничены изображениями. Формы API не менялись (обложка → тот же ImageSet; документы → тот же url/type/size).
+
 ## Вне рамок v1 (не делать без запроса)
 
 Публичные аккаунты, постинг на форуме, рассылки подписчикам, Telegram, Next Draft Mode, page builder, RSS, полнотекстовый поиск по сайту.

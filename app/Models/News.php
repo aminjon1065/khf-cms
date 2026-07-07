@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -40,6 +41,7 @@ class News extends Model implements HasMedia
         'slug',
         'category_id',
         'region_id',
+        'cover_media_asset_id',
         'excerpt',
         'body',
         'author',
@@ -113,6 +115,25 @@ class News extends Model implements HasMedia
     }
 
     /**
+     * Cover image chosen from the reusable media library.
+     */
+    public function coverAsset(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class, 'cover_media_asset_id');
+    }
+
+    /**
+     * Ordered gallery of reusable library images (CMS-only; not exposed by the API).
+     *
+     * @return BelongsToMany<MediaAsset, $this>
+     */
+    public function galleryAssets(): BelongsToMany
+    {
+        return $this->belongsToMany(MediaAsset::class, 'news_gallery', 'news_id', 'media_asset_id')
+            ->withPivot('sort');
+    }
+
+    /**
      * @return HasMany<NewsRevision, $this>
      */
     public function revisions(): HasMany
@@ -146,6 +167,12 @@ class News extends Model implements HasMedia
      */
     public function imageSet(): ?array
     {
+        // Prefer the reusable library cover; fall back to the legacy per-post
+        // spatie `cover` collection so existing items keep working.
+        if ($this->coverAsset !== null && ($set = $this->coverAsset->imageSet()) !== null) {
+            return $set;
+        }
+
         $media = $this->getFirstMedia(self::COVER_COLLECTION);
 
         if ($media === null) {

@@ -8,22 +8,24 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ReplicateAction;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SlidesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['imageAsset.media', 'media']))
             ->columns([
-                SpatieMediaLibraryImageColumn::make('image')
+                ImageColumn::make('image')
                     ->label('Изображение')
-                    ->collection(Slide::IMAGE_COLLECTION)
-                    ->conversion('thumb'),
+                    ->state(fn (Slide $record): ?string => $record->imageSet()['thumb'] ?? null)
+                    ->height(48),
                 TextColumn::make('title')
                     ->label('Заголовок')
                     ->limit(40),

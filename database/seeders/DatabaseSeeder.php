@@ -56,8 +56,10 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Attributes for a freshly created administrator. When no ADMIN_PASSWORD is
-     * configured a strong one is generated and printed once to the console.
+     * Attributes for a freshly created administrator. With no ADMIN_PASSWORD:
+     * locally the well-known dev password "password" is used so the Filament
+     * panel is instantly reachable (admin@khf.tj / password); outside local a
+     * strong random one is generated and printed once (never a known secret).
      *
      * @param  array{name: string, email: string, password: ?string}  $config
      * @return array<string, mixed>
@@ -67,10 +69,14 @@ class DatabaseSeeder extends Seeder
         $password = $config['password'];
 
         if (blank($password)) {
-            $password = Str::password(16);
+            if (app()->isLocal()) {
+                $password = 'password';
+            } else {
+                $password = Str::password(16);
 
-            $this->command?->warn("Generated admin password for {$config['email']}: {$password}");
-            $this->command?->warn('Store it now — it will not be shown again.');
+                $this->command?->warn("Generated admin password for {$config['email']}: {$password}");
+                $this->command?->warn('Store it now — it will not be shown again.');
+            }
         }
 
         return [

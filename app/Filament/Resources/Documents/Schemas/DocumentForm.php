@@ -5,9 +5,13 @@ namespace App\Filament\Resources\Documents\Schemas;
 use App\Enums\DocType;
 use App\Enums\DocumentCategory;
 use App\Filament\Support\LocaleTabs;
+use App\Filament\Support\MediaPicker\DocumentAssetPickerTable;
+use App\Filament\Support\MediaPicker\UploadAssetAction;
 use App\Models\Document;
+use App\Rules\MediaAssetKind;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\ModalTableSelect;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -34,8 +38,15 @@ class DocumentForm
                     ->native(false)
                     ->displayFormat('d.m.Y')
                     ->required(),
+                ModalTableSelect::make('media_asset_id')
+                    ->label('Файл из медиатеки')
+                    ->relationship('mediaAsset', 'name')
+                    ->tableConfiguration(DocumentAssetPickerTable::class)
+                    ->rule(MediaAssetKind::document())
+                    ->hintAction(UploadAssetAction::make(image: false))
+                    ->helperText('Выберите документ из медиатеки или загрузите новый (можно переиспользовать).'),
                 FileUpload::make('file_path')
-                    ->label('Файл')
+                    ->label('Или загрузить файл')
                     ->disk(Document::DISK)
                     ->directory('documents')
                     ->downloadable()
@@ -53,12 +64,12 @@ class DocumentForm
                     ->native(false)
                     // Auto-derived from an uploaded file; required only for a link/placeholder
                     // document without a file, so the API never serves a null type.
-                    ->required(fn (Get $get): bool => blank($get('file_path')))
+                    ->required(fn (Get $get): bool => blank($get('file_path')) && blank($get('media_asset_id')))
                     ->helperText('Определяется автоматически при загрузке файла; укажите вручную, если файла нет.'),
                 TextInput::make('size')
                     ->label('Размер')
                     ->maxLength(255)
-                    ->required(fn (Get $get): bool => blank($get('file_path')))
+                    ->required(fn (Get $get): bool => blank($get('file_path')) && blank($get('media_asset_id')))
                     ->helperText('Определяется автоматически при загрузке файла; укажите вручную, если файла нет.'),
                 TextInput::make('sort')
                     ->label('Порядок')

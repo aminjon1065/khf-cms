@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 
 class NewsController extends Controller
 {
-    private const EAGER = ['category', 'region', 'media'];
+    private const EAGER = ['category', 'region', 'media', 'coverAsset.media'];
 
     public function index(Request $request): AnonymousResourceCollection
     {

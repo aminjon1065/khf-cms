@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\MediaAsset;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\MediaLibrary\MediaCollections\Events\MediaHasBeenAddedEvent;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +40,16 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('contact', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('subscriptions', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('news-view', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        // When a library asset's file is uploaded/replaced, resync + revalidate
+        // every record that reuses it (a shared file swap changes public output).
+        Event::listen(MediaHasBeenAddedEvent::class, function (MediaHasBeenAddedEvent $event): void {
+            $model = $event->media->model;
+
+            if ($model instanceof MediaAsset) {
+                $model->syncReferencesAfterFileChange();
+            }
+        });
 
         // Password policy for admin/editor accounts (ToR §10). Stricter in
         // production; relaxed locally so dev/test fixtures stay simple.

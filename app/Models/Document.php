@@ -9,6 +9,7 @@ use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -32,6 +33,7 @@ class Document extends Model
         'type',
         'size',
         'file_path',
+        'media_asset_id',
         'sort',
         'is_active',
     ];
@@ -80,11 +82,34 @@ class Document extends Model
     }
 
     /**
-     * When a file is (re)attached, derive `type` and `size` from it so the API
-     * values always match the actual file (docs/API-CONTRACT.md §documents).
+     * A reusable library document, when one is linked instead of a direct upload.
+     */
+    public function mediaAsset(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class);
+    }
+
+    /**
+     * Derive `type` and `size` from the actual file so the API values always
+     * match it (docs/API-CONTRACT.md §documents). A linked library asset wins
+     * over the legacy per-document `file_path`.
      */
     protected function syncFileMetadata(): void
     {
+        if (filled($this->media_asset_id)) {
+            $asset = $this->mediaAsset()->first();
+
+            if ($asset !== null) {
+                if (($type = $asset->docType()) !== null) {
+                    $this->type = $type;
+                }
+
+                $this->size = $asset->humanSize();
+
+                return;
+            }
+        }
+
         if (! $this->isDirty('file_path') || blank($this->file_path)) {
             return;
         }
@@ -108,10 +133,15 @@ class Document extends Model
     }
 
     /**
-     * Absolute URL to the file, or null when none is attached.
+     * Absolute URL to the file, or null when none is attached. A linked library
+     * asset wins over the legacy per-document `file_path`.
      */
     public function fileUrl(): ?string
     {
+        if (filled($this->media_asset_id)) {
+            return $this->mediaAsset?->fileUrl();
+        }
+
         return blank($this->file_path) ? null : Storage::disk(self::DISK)->url($this->file_path);
     }
 

@@ -27,7 +27,7 @@ class HomeController extends Controller
     {
         $slides = Slide::query()
             ->activeOrdered()
-            ->with(['news', 'media'])
+            ->with(['news', 'media', 'imageAsset.media'])
             ->get();
 
         return SlideResource::collection($slides);

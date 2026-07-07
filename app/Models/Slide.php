@@ -34,6 +34,7 @@ class Slide extends Model implements HasMedia
         'date',
         'source',
         'news_id',
+        'image_media_asset_id',
         'sort',
         'active',
     ];
@@ -75,6 +76,16 @@ class Slide extends Model implements HasMedia
         return $this->belongsTo(News::class);
     }
 
+    /**
+     * Slide image chosen from the reusable media library.
+     *
+     * @return BelongsTo<MediaAsset, $this>
+     */
+    public function imageAsset(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class, 'image_media_asset_id');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(self::IMAGE_COLLECTION)
@@ -101,6 +112,12 @@ class Slide extends Model implements HasMedia
      */
     public function imageSet(): ?array
     {
+        // Prefer the reusable library image; fall back to the legacy per-slide
+        // spatie `image` collection so existing slides keep working.
+        if ($this->imageAsset !== null && ($set = $this->imageAsset->imageSet()) !== null) {
+            return $set;
+        }
+
         $media = $this->getFirstMedia(self::IMAGE_COLLECTION);
 
         if ($media === null) {

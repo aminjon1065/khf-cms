@@ -54,8 +54,20 @@ test('re-seeding preserves a rotated password and edited name, and keeps the adm
         ->and($admin->hasRole('admin'))->toBeTrue();
 });
 
-test('seeder generates a random password when none is configured', function () {
+test('seeder uses the known local password "password" when none is configured', function () {
     config()->set('khf.admin.password', null);
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $this->seed(DatabaseSeeder::class);
+
+    $admin = User::query()->where('email', 'boss@khf.tj')->firstOrFail();
+
+    expect(Hash::check('password', $admin->password))->toBeTrue();
+});
+
+test('seeder generates a random password outside local when none is configured', function () {
+    config()->set('khf.admin.password', null);
+    app()->detectEnvironment(fn (): string => 'staging');
 
     $this->seed(DatabaseSeeder::class);
 
@@ -63,5 +75,6 @@ test('seeder generates a random password when none is configured', function () {
 
     expect($admin)->not->toBeNull()
         ->and($admin->password)->not->toBeEmpty()
+        ->and(Hash::check('password', $admin->password))->toBeFalse()
         ->and(Hash::check('Sup3rSecret!', $admin->password))->toBeFalse();
 });

@@ -25,6 +25,7 @@ class DocumentController extends Controller
 
         $items = Document::query()
             ->active()
+            ->with('mediaAsset.media')
             ->when($filter !== null, fn ($query) => $query->where('category', $filter))
             ->orderByDesc('document_date')
             ->orderByDesc('id')
